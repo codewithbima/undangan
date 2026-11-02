@@ -1,7 +1,7 @@
 /* ===== KONFIGURASI — ubah semua data di sini (semua nilai di bawah adalah PLACEHOLDER) ===== */
 const CONFIG = {
-  groomNick: "Raden", groomFull: "Raden Bagus Prasetyo, S.Kom.", groomParents: "Bapak Sutrisno & Ibu Sri Wahyuni",
-  brideNick: "Ayu",   brideFull: "Ayu Lestari Ningrum, S.Pd.",    brideParents: "Bapak Slamet Riyadi & Ibu Siti Aminah",
+  groomNick: "Bima Tri Yuda, S.Kom.", groomFull: "Bima Tri Yuda, S.Kom.", groomParents: "Bapak Sutrisno & Ibu Sri Wahyuni",
+  brideNick: "Ayu Lestari Ningrum, S.Pd.",   brideFull: "Ayu Lestari Ningrum, S.Pd.",    brideParents: "Bapak Slamet Riyadi & Ibu Siti Aminah",
   groomPhoto: "", brideFull_: "",           // contoh: "assets/images/groom.jpg" (kosong = placeholder)
   bridePhoto: "",
   gallery: ["", "", "", "", "", ""],         // contoh: "assets/images/g1.jpg"
@@ -18,11 +18,11 @@ const CONFIG = {
     { t: "Menuju Pelaminan", d: "14 Maret 2027", s: "Dengan ridha Allah, kami melangkah ke jenjang pernikahan." }
   ],
   info: ["Dress code: nuansa cokelat, krem, atau putih gading.", "Parkir tersedia di halaman pendopo.", "Mohon hadir 15 menit sebelum acara."],
-  gifts: [ { bank: "Bank Contoh (PLACEHOLDER)", number: "1234567890", name: "a.n. Raden Bagus Prasetyo" },
+  gifts: [ { bank: "Bank Contoh (PLACEHOLDER)", number: "1234567890", name: "a.n. Bima Tri Yuda" },
            { bank: "E-Wallet Contoh (PLACEHOLDER)", number: "081234567890", name: "a.n. Ayu Lestari Ningrum" } ],
   // URL Google Apps Script Web App (lihat README.md). Kosong = MODE DEMO (data TIDAK tersimpan ke server).
   rsvpEndpoint: "", wishEndpoint: "",
-  music: "assets/audio/music.mp3"            // tombol musik otomatis tersembunyi jika file tidak ada
+  music: "assets/audio/bim undangan musik.mpeg"            // tombol musik otomatis tersembunyi jika file tidak ada
 };
 /* ===== AKHIR KONFIGURASI ===== */
 
@@ -74,23 +74,85 @@ function addWish(d) { if (!d.text) return; $("#wishes").insertAdjacentHTML("afte
 $("#rsvpForm").onsubmit = e => { e.preventDefault(); submit(e.target, C.rsvpEndpoint, $("#rsvpMsg"), "rsvp", () => {}); };
 $("#wishForm").onsubmit = e => { e.preventDefault(); submit(e.target, C.wishEndpoint, $("#wishMsg"), "wish", addWish); };
 
-/* Buka undangan, musik, navigasi, scroll */
-const audio = $("#bgm"), mb = $("#musicBtn");
-audio.src = C.music;
-audio.addEventListener("canplay", () => { mb.hidden = !$("#cover").classList.contains("open"); }, { once: true });
-audio.addEventListener("error", () => mb.remove());
-mb.onclick = () => { if (audio.paused) { audio.play(); mb.classList.add("playing"); } else { audio.pause(); mb.classList.remove("playing"); } };
+const audio = $("#bgm"); // Diperbaiki: sebelumnya keliru menunjuk #topBtn.
+const mb = $("#musicBtn");
 
-$("#openBtn").onclick = () => {
-  $("#cover").classList.add("open"); document.body.classList.remove("locked");
-  $("#main").hidden = $("#nav").hidden = false; scrollTo(0, 0);
-  if (audio.readyState >= 3) mb.hidden = false; else audio.load();
-  audio.addEventListener("canplay", () => mb.hidden = false, { once: true });
+audio.src = C.music;
+audio.loop = true;
+audio.preload = "auto";
+
+audio.addEventListener("canplay", () => {
+  if ($("#cover").classList.contains("open")) {
+    mb.hidden = false;
+  }
+});
+
+audio.addEventListener("error", () => {
+  mb.hidden = true;
+});
+
+mb.onclick = async () => {
+  try {
+    if (audio.paused) {
+      await audio.play();
+      mb.classList.add("playing");
+    } else {
+      audio.pause();
+      mb.classList.remove("playing");
+    }
+  } catch (error) {
+    console.warn("Musik gagal diputar:", error);
+  }
+};
+
+$("#openBtn").onclick = async () => {
+  $("#cover").classList.add("open");
+  document.body.classList.remove("locked");
+
+  $("#main").hidden = false;
+  $("#nav").hidden = false;
+
+  scrollTo(0, 0);
+
+  // Memulai musik langsung dari klik pengguna.
+  try {
+    await audio.play();
+    mb.hidden = false;
+    mb.classList.add("playing");
+  } catch (error) {
+    console.warn("Musik gagal diputar:", error);
+    mb.hidden = false;
+  }
+
   observe();
 };
-const topBtn = $("#topBtn"); onscroll = () => topBtn.hidden = scrollY < 500 || $("#main").hidden;
-topBtn.onclick = () => scrollTo({ top: 0, behavior: "smooth" });
+
+/* ==========================================================
+   FITUR BARU SELESAI
+   ========================================================== */
+
+
+/* ===== NAVIGASI DAN SCROLL — FUNGSI ASLI DIPERTAHANKAN ===== */
+const topBtn = $("#topBtn");
+
+onscroll = () => {
+  topBtn.hidden = scrollY < 500 || $("#main").hidden;
+};
+
+topBtn.onclick = () => {
+  scrollTo({ top: 0, behavior: "smooth" });
+};
+
 function observe() {
-  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .12 });
+  const io = new IntersectionObserver(
+    es => es.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add("in");
+        io.unobserve(e.target);
+      }
+    }),
+    { threshold: .12 }
+  );
+
   document.querySelectorAll(".rv").forEach(el => io.observe(el));
 }
